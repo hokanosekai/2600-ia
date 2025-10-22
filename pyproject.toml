@@ -5,6 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "imbalanced-learn>=0.14.0",
     "pandas>=2.3.3",
     "pyarrow>=21.0.0",
     "scikit-learn>=1.7.2",

@@ -24,12 +24,21 @@ def main():
     
     args = parser.parse_args()
 
-    # --- Chargement des données ---
-    df = pd.read_parquet(args.data)
-
     # --- Chargement du modèle ---
     with open(args.model, "rb") as f:
-        from_model = skio.load(f)
+        trusted_types = [
+            "_loss.CyHalfMultinomialLoss",
+            "numpy.dtype",
+            "sklearn._loss.link.Interval",
+            "sklearn._loss.link.MultinomialLogit",
+            "sklearn._loss.loss.HalfMultinomialLoss",
+            "sklearn.ensemble._hist_gradient_boosting.binning._BinMapper",
+            "sklearn.ensemble._hist_gradient_boosting.predictor.TreePredictor",
+        ]
+        from_model = skio.load(f, trusted=trusted_types)
+
+    # --- Chargement des données ---
+    df = pd.read_parquet(args.data)
 
     # --- Séparation X / y ---
     X = df.drop(columns=[args.label], axis=1)

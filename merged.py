@@ -82,11 +82,11 @@ def make_model(kind: str, random_state: int) -> object:
     """Crée une instance de modèle de classification."""
     kind = kind.lower()
     if kind == "hgb":
-        return HistGradientBoostingClassifier(max_iter=300, learning_rate=0.1, random_state=random_state)
+        return HistGradientBoostingClassifier(max_iter=300, learning_rate=0.1, random_state=random_state, class_weight='balanced')
     if kind == "rf":
-        return RandomForestClassifier(n_estimators=400, n_jobs=-1, random_state=random_state)
+        return RandomForestClassifier(n_estimators=400, n_jobs=-1, random_state=random_state, class_weight='balanced')
     if kind == "logreg":
-        return LogisticRegression(max_iter=2000)
+        return LogisticRegression(max_iter=2000, class_weight='balanced')
     raise ValueError(f"Modèle inconnu: {kind}")
 
 
