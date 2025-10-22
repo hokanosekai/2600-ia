@@ -102,8 +102,8 @@ def main():
 
     # Sauvegarder le pipeline entraîné au format .skio
     try:
-        skio.dump(final_model_pipeline, 'student_model.skio')
-        print("\n-> Modèle final sauvegardé avec succès sous le nom 'student_model.skio'.")
+        skio.dump(final_model_pipeline, 'gemini.skio')
+        print("\n-> Modèle final sauvegardé avec succès sous le nom 'gemini.skio'.")
     except Exception as e:
         print(f"Une erreur est survenue lors de la sauvegarde du modèle : {e}")
 

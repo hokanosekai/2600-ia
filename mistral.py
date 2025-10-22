@@ -7,7 +7,6 @@ from sklearn.metrics import classification_report
 import skops.io as skio
 
 # Charger les données
-# df = pd.read_csv('Training_export.csv')
 df = pd.read_parquet('Training.parquet')
 
 # Séparer les caractéristiques et la cible
@@ -31,5 +30,5 @@ y_pred = pipeline.predict(X_test)
 print(classification_report(y_test, y_pred))
 
 # Sauvegarder le modèle
-with open("student_model.skio", "wb") as f:
+with open("mistral.skio", "wb") as f:
     skio.dump(pipeline, f)

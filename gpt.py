@@ -107,7 +107,7 @@ def main():
     X = df.drop(columns=[target])
 
     if args.subsample and args.subsample < len(df):
-        df_small = df.sample(n=args.subsample, random_state=args.seed, stratify=y if y.nunique() > 1 else None)
+        df_small = df.sample(n=args.subsample, random_state=args.seed)
         y = df_small[target].astype("category")
         X = df_small.drop(columns=[target])
         print(f"➡️ Subsample utilisé: {len(df_small)} lignes")
