@@ -10,4 +10,4 @@ wheels/
 .venv
 
 *.parquet
-*.skio
+student_model-*.skio
