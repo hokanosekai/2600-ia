@@ -1,8 +1,6 @@
 import pandas as pd
 import numpy as np
 import skops.io as skio
-from os import cpu_count
-import os
 
 # Imports Scikit-learn
 from sklearn.pipeline import Pipeline
@@ -12,6 +10,9 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.model_selection import GridSearchCV, train_test_split
 # L'un des meilleurs modèles pour données tabulaires : rapide et performant
 from sklearn.ensemble import HistGradientBoostingClassifier
+
+DATA_PATH = 'data/Custom_Balanced.parquet'  # Chemin vers le jeu de données original
+OUTPUT_MODEL_PATH = 'models/student_model-hgb-cv.skio'  # Chemin pour sauvegarder le modèle final
 
 # --- 1. Transformateur Personnalisé (inchangé) ---
 class InfinityHandler(BaseEstimator, TransformerMixin):
@@ -30,11 +31,11 @@ class InfinityHandler(BaseEstimator, TransformerMixin):
         return X_df
 
 # --- 2. Chargement des données ---
-print("Chargement de Training.parquet (Le fichier ORIGINAL)...")
+print(f"Chargement de {DATA_PATH}...")
 try:
-    df = pd.read_parquet("Training.parquet") 
+    df = pd.read_parquet(DATA_PATH)
 except FileNotFoundError:
-    print("Erreur: Le fichier 'Training.parquet' original n'a pas été trouvé.")
+    print(f"Erreur: Le fichier '{DATA_PATH}' n'a pas été trouvé.")
     exit()
 
 print(f"Données originales chargées. Forme: {df.shape}")
@@ -123,8 +124,8 @@ final_pipeline.fit(X_full, y_full)
 print("Entraînement final terminé.")
 
 # --- 9. Sauvegarde du modèle ---
-print("\nSauvegarde du MEILLEUR modèle final sous 'student_model.skio'...")
-with open("student_model_2.skio", "wb") as f:
+print(f"\nSauvegarde du MEILLEUR modèle final sous '{OUTPUT_MODEL_PATH}'...")
+with open(OUTPUT_MODEL_PATH, "wb") as f:
     skio.dump(final_pipeline, f)
 
 print("Modèle sauvegardé avec succès.")

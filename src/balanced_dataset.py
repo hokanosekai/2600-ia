@@ -1,15 +1,6 @@
 import pandas as pd
 import numpy as np
-import skops.io as skio
-from os import cpu_count
 import os
-
-# Imports Scikit-learn
-from sklearn.pipeline import Pipeline
-from sklearn.impute import SimpleImputer
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report, accuracy_score
 
 # Imports pour le transformateur personnalisé
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -45,9 +36,9 @@ def create_custom_balanced_set(original_parquet_path,
         # --- LOGIQUE MODIFIÉE ICI ---
         # 1. Définir le nombre d'échantillons cible
         if cls == 'Benign':
-            target_samples = 7500
+            target_samples = 21000
         else:
-            target_samples = 1500
+            target_samples = 3000
         # --- FIN DE LA MODIFICATION ---
             
         print(f"Traitement de la classe '{cls}' (objectif: {target_samples} échantillons)...")
@@ -101,8 +92,8 @@ class InfinityHandler(BaseEstimator, TransformerMixin):
 
 if __name__ == "__main__":
     
-    ORIGINAL_DATA_PATH = 'Training.parquet'
-    NEW_TRAINING_PATH = 'Custom_Balanced.parquet' # Nouveau nom
+    ORIGINAL_DATA_PATH = 'data/Training.parquet'
+    NEW_TRAINING_PATH = 'data/Custom_Balanced.parquet' # Nouveau nom
 
     # Exécute la fonction de création personnalisée
     success = create_custom_balanced_set(
@@ -114,66 +105,66 @@ if __name__ == "__main__":
         print("Arrêt du script car le fichier d'origine n'a pas pu être traité.")
         exit()
 
-    # --- ÉTAPE B : Pipeline du Challenge (utilise le fichier créé) ---
+    # # --- ÉTAPE B : Pipeline du Challenge (utilise le fichier créé) ---
     
-    print(f"\n--- Démarrage du Pipeline sur {NEW_TRAINING_PATH} ---")
-    df = pd.read_parquet(NEW_TRAINING_PATH)
-    print(f"Données chargées. Forme: {df.shape}")
+    # print(f"\n--- Démarrage du Pipeline sur {NEW_TRAINING_PATH} ---")
+    # df = pd.read_parquet(NEW_TRAINING_PATH)
+    # print(f"Données chargées. Forme: {df.shape}")
 
-    # Définition du Pipeline
-    pipeline = Pipeline([
-        ('handle_infinity', InfinityHandler()),
-        ('imputer', SimpleImputer(strategy='median')),
-        ('classifier', RandomForestClassifier(
-            n_estimators=100,
-            max_depth=15,
-            min_samples_leaf=10,
-            # Le jeu est déséquilibré (7500 vs 1500), donc 'balanced' est une bonne idée
-            class_weight='balanced', 
-            random_state=42,
-            n_jobs=-1
-        ))
-    ])
+    # # Définition du Pipeline
+    # pipeline = Pipeline([
+    #     ('handle_infinity', InfinityHandler()),
+    #     ('imputer', SimpleImputer(strategy='median')),
+    #     ('classifier', RandomForestClassifier(
+    #         n_estimators=100,
+    #         max_depth=15,
+    #         min_samples_leaf=10,
+    #         # Le jeu est déséquilibré (7500 vs 1500), donc 'balanced' est une bonne idée
+    #         class_weight='balanced', 
+    #         random_state=42,
+    #         n_jobs=-1
+    #     ))
+    # ])
     
-    print("\nPipeline défini :")
-    print(pipeline)
+    # print("\nPipeline défini :")
+    # print(pipeline)
 
-    X = df.drop(columns='ClassLabel', axis=1)
-    y = df['ClassLabel']
+    # X = df.drop(columns='ClassLabel', axis=1)
+    # y = df['ClassLabel']
     
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, 
-        test_size=0.2, 
-        random_state=42, 
-        stratify=y # Important pour garder l'équilibre 7500/1500 dans le test
-    )
+    # X_train, X_test, y_train, y_test = train_test_split(
+    #     X, y, 
+    #     test_size=0.2, 
+    #     random_state=42, 
+    #     stratify=y # Important pour garder l'équilibre 7500/1500 dans le test
+    # )
 
-    print(f"Taille entraînement: {X_train.shape}")
-    print(f"Taille test local: {X_test.shape}")
+    # print(f"Taille entraînement: {X_train.shape}")
+    # print(f"Taille test local: {X_test.shape}")
 
-    # Entraînement pour évaluation locale
-    print("\nDébut de l'entraînement (évaluation locale)...")
-    pipeline.fit(X_train, y_train)
-    print("Entraînement local terminé.")
+    # # Entraînement pour évaluation locale
+    # print("\nDébut de l'entraînement (évaluation locale)...")
+    # pipeline.fit(X_train, y_train)
+    # print("Entraînement local terminé.")
 
-    # Évaluation locale
-    print("\nÉvaluation sur le jeu de test local (Score fiable)...")
-    y_pred = pipeline.predict(X_test)
-    local_score = accuracy_score(y_test, y_pred)
+    # # Évaluation locale
+    # print("\nÉvaluation sur le jeu de test local (Score fiable)...")
+    # y_pred = pipeline.predict(X_test)
+    # local_score = accuracy_score(y_test, y_pred)
 
-    print(f"Score (Accuracy) local : {local_score:.4f}")
-    print("\nRapport de classification local :")
-    print(classification_report(y_test, y_pred))
+    # print(f"Score (Accuracy) local : {local_score:.4f}")
+    # print("\nRapport de classification local :")
+    # print(classification_report(y_test, y_pred))
 
-    # Entraînement final sur TOUTES les données équilibrées
-    print("\nDébut de l'entraînement final (sur 100% des données)...")
-    pipeline.fit(X, y)
-    print("Entraînement final terminé.")
+    # # Entraînement final sur TOUTES les données équilibrées
+    # print("\nDébut de l'entraînement final (sur 100% des données)...")
+    # pipeline.fit(X, y)
+    # print("Entraînement final terminé.")
 
-    # Sauvegarde du modèle
-    print("\nSauvegarde du modèle final sous 'student_model.skio'...")
-    with open("student_model.skio", "wb") as f:
-        skio.dump(pipeline, f)
+    # # Sauvegarde du modèle
+    # print("\nSauvegarde du modèle final sous 'student_model.skio'...")
+    # with open("student_model.skio", "wb") as f:
+    #     skio.dump(pipeline, f)
 
-    print("Modèle sauvegardé avec succès.")
-    print("Mission terminée.")
+    # print("Modèle sauvegardé avec succès.")
+    # print("Mission terminée.")
