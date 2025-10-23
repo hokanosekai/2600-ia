@@ -1,0 +1,4 @@
+- Nettoyer les colonnes (supprimer url, encodages superflus, corrélations >0.95).
+- Extraire des features spécialisées depuis l’URL (longueur, présence de chiffres…).
+- Équilibrer le jeu d’entraînement (pondération ou sur-échantillonnage).
+- Lancer une recherche d’hyperparamètres et comparer plusieurs modèles.

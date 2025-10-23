@@ -129,6 +129,54 @@ def make_model(kind: str, random_state: int) -> object:
     raise ValueError(f"Modèle inconnu: {kind}")
 
 
+def balance_df(
+    df: pd.DataFrame,
+    target_col: str,
+    per_class: int,
+    mode: str,
+    seed: int,
+    include_classes: list[str] | None = None,
+) -> pd.DataFrame:
+    """Retourne un DataFrame équilibré à per_class par classe.
+    mode:
+      - 'downsample': réduit les classes > per_class, ne duplique pas les classes < per_class (elles restent < per_class)
+      - 'upsample': duplique (avec remplacement) les classes < per_class, ne réduit pas celles > per_class
+      - 'both': downsample au-dessus, upsample en-dessous
+    """
+    rng = np.random.RandomState(seed)
+    if include_classes is None:
+        classes = df[target_col].astype("category").cat.categories.tolist()
+    else:
+        classes = [c for c in include_classes if c in df[target_col].unique()]
+
+    parts = []
+    for cls in classes:
+        block = df[df[target_col] == cls]
+        n = len(block)
+
+        # Déterminer la taille cible pour cette classe
+        target_n = per_class
+        if mode == "downsample":
+            target_n = min(per_class, n)
+        elif mode == "upsample":
+            target_n = max(per_class, n)
+        elif mode == "both":
+            target_n = per_class
+
+        if target_n <= n:
+            # échantillonnage sans remplacement
+            sampled = block.sample(n=target_n, replace=False, random_state=seed)
+        else:
+            # sur-échantillonnage avec remplacement (duplication)
+            idx = rng.choice(block.index.values, size=target_n, replace=True)
+            sampled = block.loc[idx]
+
+        parts.append(sampled)
+
+    balanced = pd.concat(parts, axis=0).sample(frac=1.0, random_state=seed).reset_index(drop=True)
+    return balanced
+
+
 def main():
     """Fonction principale pour l'entraînement et l'export du modèle."""
     p = argparse.ArgumentParser(description="Script d'entraînement de modèle de classification.")
@@ -163,6 +211,23 @@ def main():
         default=5,
         help="k_neighbors pour SMOTE (utilisé pour smote/smote_tomek/smote_enn).",
     )
+    p.add_argument(
+        "--balance-per-class",
+        type=int,
+        default=0,
+        help="Si > 0, crée un dataset équilibré avec N échantillons par classe.",
+    )
+    p.add_argument(
+        "--balance-mode",
+        choices=["downsample", "upsample", "both"],
+        default="both",
+        help="Stratégie d’équilibrage: réduire, augmenter, ou les deux.",
+    )
+    p.add_argument(
+        "--balance-classes",
+        default=None,
+        help="Liste de classes à inclure (séparées par des virgules). Par défaut: toutes.",
+    )
     args = p.parse_args()
 
     print("--- Étape 1: Chargement et Nettoyage des Données ---")
@@ -175,6 +240,26 @@ def main():
 
     print("\n--- Étape 2: Préparation des Données ---")
     target_col = args.target or find_target(df)
+
+    # Équilibrage optionnel avant split
+    if args.balance_per_class and args.balance_per_class > 0:
+        include = None
+        if args.balance_classes:
+            include = [s.strip() for s in args.balance_classes.split(",") if s.strip()]
+        before_counts = df[target_col].value_counts()
+        df = balance_df(
+            df=df,
+            target_col=target_col,
+            per_class=args.balance_per_class,
+            mode=args.balance_mode,
+            seed=args.seed,
+            include_classes=include,
+        )
+        after_counts = df[target_col].value_counts()
+        print(f"➡️ Équilibrage appliqué ({args.balance_mode}) à {args.balance_per_class} échantillons par classe.")
+        print("Avant:\n", before_counts.to_string())
+        print("Après:\n", after_counts.to_string())
+
     y = df[target_col].astype("category")
     X = df.drop(columns=[target_col])
     print(f"Colonne cible '{target_col}' identifiée.")

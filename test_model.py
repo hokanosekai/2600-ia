@@ -3,6 +3,8 @@ import argparse
 import pandas as pd
 import skops.io as skio
 
+from gemini_brute import InfinityHandler
+
 def main():
     # --- Définition des arguments ---
     parser = argparse.ArgumentParser(description="Évalue un modèle skio sur un fichier parquet.")
@@ -27,6 +29,7 @@ def main():
     # --- Chargement du modèle ---
     with open(args.model, "rb") as f:
         trusted_types = [
+            "__main__.InfinityHandler",
             "_loss.CyHalfMultinomialLoss",
             "numpy.dtype",
             "sklearn._loss.link.Interval",
@@ -34,6 +37,8 @@ def main():
             "sklearn._loss.loss.HalfMultinomialLoss",
             "sklearn.ensemble._hist_gradient_boosting.binning._BinMapper",
             "sklearn.ensemble._hist_gradient_boosting.predictor.TreePredictor",
+            "imblearn.pipeline.Pipeline",
+            "imblearn.under_sampling._prototype_selection._random_under_sampler.RandomUnderSampler"
         ]
         from_model = skio.load(f, trusted=trusted_types)
 
@@ -47,6 +52,9 @@ def main():
     # --- Calcul du score ---
     score = from_model.score(X, y)
     print(f"Score du modèle : {score:.4f}")
+
+
+
 
 
 if __name__ == "__main__":
